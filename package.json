@@ -15,9 +15,13 @@
   "type": "commonjs",
   "main": "module.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest --coverage",
+    "docs": "jsdoc -c ./jsdoc.config.json -r -d ./docs"
   },
   "devDependencies": {
-    "jest": "^30.2.0"
+    "@babel/preset-env": "^7.29.0",
+    "babel-jest": "^30.2.0",
+    "jest": "^30.2.0",
+    "jsdoc": "^4.0.5"
   }
 }
