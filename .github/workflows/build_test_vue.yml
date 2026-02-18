@@ -47,8 +47,8 @@ jobs:
       - name: Prepare artifact directory
         run: |
           mkdir -p site
-          cp -r ./my-app/dist/* site/
-          cp -r ./my-app/docs site/documentation
+          cp -r ./my-app/dist/* ./
+          cp -r ./my-app/docs ./documentation
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
