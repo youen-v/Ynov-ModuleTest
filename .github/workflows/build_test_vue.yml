@@ -44,13 +44,16 @@ jobs:
         id: pages
         uses: actions/configure-pages@v3
 
-      - name: Upload artifact (app + docs)
+      - name: Prepare artifact directory
+        run: |
+          mkdir -p site
+          cp -r ./my-app/dist site/
+          cp -r ./my-app/docs site/documentation
+
+      - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: |
-            ./my-app/dist
-            ./my-app/docs
-          if-no-files-found: error
+          path: ./site
 
   deploy:
     needs: build_test_document
