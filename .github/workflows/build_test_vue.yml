@@ -46,14 +46,13 @@ jobs:
 
       - name: Prepare artifact directory
         run: |
-          mkdir -p site
           cp -r ./my-app/dist/* ./
-          cp -r ./my-app/docs ./documentation
+          cp -r ./my-app/docs ./docs
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./site
+          path: ./
 
   deploy:
     needs: build_test_document
