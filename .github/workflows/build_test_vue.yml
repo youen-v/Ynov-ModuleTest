@@ -38,7 +38,7 @@ jobs:
 
       - name: Generate Documentation
         working-directory: ./my-app
-        run: npx jsdoc -c jsdoc.json
+        run: npx jsdoc -c jsdoc.config.json
 
       - name: Setup Pages
         id: pages
