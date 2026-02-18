@@ -1,50 +1,67 @@
 name: Build and Test Vue Application
 
-on: 
+on:
   push:
     branches: [main]
 
 jobs:
-  build_test:
+  build_test_document:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node_version: [22.x]
     steps:
       - name: Clone repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
       - name: Use Node.js ${{ matrix.node_version }}
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node_version }}
-      - name: npm ci, build and test
+
+      - name: Install dependencies
         working-directory: ./my-app
-        run: |
-          npm ci
-          npm run build --if-present
-          npm run test
-      - name: Codecov
+        run: npm ci
+
+      - name: Build application
+        working-directory: ./my-app
+        run: npm run build --if-present
+
+      - name: Run tests
+        working-directory: ./my-app
+        run: npm test
+
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Generate Documentation
+        working-directory: ./my-app
+        run: npx jsdoc -c jsdoc.json
+
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v3
-      - name: Upload artifact
+
+      - name: Upload artifact (app + docs)
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./my-app/dist
+          path: |
+            ./my-app/dist
+            ./my-app/docs
           if-no-files-found: error
+
   deploy:
-    needs: build_test
+    needs: build_test_document
     permissions:
-     pages: write
-     id-token: write
+      pages: write
+      id-token: write
     environment:
       name: github-pages
-      url: ${{steps.deployment.outputs.page_url}}
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-     - name: Deploy to GitHub Pages
-       id: deployment
-       uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
