@@ -12,5 +12,6 @@ module.exports = {
   moduleNameMapper: {
     "^@vue/test-utils$":
       "<rootDir>/node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js",
+    "^@/(.*)$": "<rootDir>/src/$1",
   },
 };
