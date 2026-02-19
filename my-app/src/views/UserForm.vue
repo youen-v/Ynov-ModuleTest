@@ -128,6 +128,10 @@
         Envoyer
       </button>
 
+      <p v-if="serverError" class="error-message" role="alert">
+        {{ serverError }}
+      </p>
+
       <div v-if="toasterMessage" class="toaster-message" role="status" aria-live="polite">
         {{ toasterMessage }}
       </div>
@@ -137,9 +141,8 @@
   </div>
 </template>
 
-
 <script setup>
-import { reactive, computed, ref } from "vue";
+import { reactive, computed, ref, watch } from "vue";
 import { useRouter } from 'vue-router';
 import { useUsersStore } from '@/stores/users';
 import {
@@ -171,6 +174,14 @@ const touchedFields = reactive({
 });
 
 const toasterMessage = ref("");
+const serverError = ref("");
+
+watch(
+  () => usersStore.error,
+  (newError) => {
+    serverError.value = newError || "";
+  }
+);
 
 function normalizeErrorMessage(error) {
   const message = error instanceof Error ? error.message : String(error);
@@ -260,6 +271,7 @@ function markAllTouched() {
 function resetForm() {
   Object.keys(formData).forEach((key) => (formData[key] = ""));
   Object.keys(touchedFields).forEach((key) => (touchedFields[key] = false));
+  serverError.value = "";
 }
 
 function submitForm() {
@@ -267,14 +279,20 @@ function submitForm() {
 
   if (!isFormValid.value) return;
 
-  usersStore.addUser({ ...formData });
-  router.push('/');
-
-  toasterMessage.value = "Enregistré";
-  setTimeout(() => (toasterMessage.value = ""), 2000);
-  resetForm();
+  try {
+    usersStore.addUser({ ...formData });
+    toasterMessage.value = "Enregistré";
+    setTimeout(() => {
+      toasterMessage.value = "";
+      router.push('/');
+    }, 2000);
+    resetForm();
+  } catch (error) {
+   touchedFields.email = true;
+  }
 }
 </script>
+
 <style scoped>
 .form-container {
   display: flex;
