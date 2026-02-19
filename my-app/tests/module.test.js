@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
-import UserForm from "../src/components/UserForm.vue";
+import UserForm from "../src/views/UserForm.vue";
 
 async function fillValidForm(user, overrides = {}) {
   const formValues = {
