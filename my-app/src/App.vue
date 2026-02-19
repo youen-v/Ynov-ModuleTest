@@ -1,7 +1,7 @@
 <template>
-  <UserForm />
+  <RouterView />
 </template>
 
 <script setup>
-import UserForm from './components/UserForm.vue'
+import { RouterView } from 'vue-router';
 </script>
