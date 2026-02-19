@@ -41,7 +41,7 @@ jobs:
         with:
           working-directory: ./my-app
           build: npm run build
-          start: npm start
+          start: npm run dev
           browser: chrome
 
       - name: Generate Documentation
