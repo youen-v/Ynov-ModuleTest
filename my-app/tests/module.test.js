@@ -1,6 +1,102 @@
-import { render, screen } from "@testing-library/vue";
+import { render, screen, fireEvent } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
 import UserForm from "../src/views/UserForm.vue";
+import { createPinia, setActivePinia } from "pinia";
+import { createRouter, createMemoryHistory } from "vue-router";
+import { useUsersStore } from "@/stores/users"; // en haut du test file
+
+test("store getters: userCount + getError", async () => {
+  localStorage.clear();
+
+  await renderWithPlugins();
+
+  const store = useUsersStore();
+
+  expect(store.userCount).toBe(0);
+  expect(store.getError).toBeNull();
+
+  // ajoute un user
+  store.addUser({
+    firstName: "A",
+    lastName: "B",
+    email: "a@b.com",
+    birthDate: "1998-05-05",
+    zip: "92000",
+    city: "Paris",
+  });
+
+  expect(store.userCount).toBe(1);
+  expect(store.getError).toBeNull();
+
+  // force l'erreur via doublon
+  expect(() =>
+    store.addUser({
+      firstName: "C",
+      lastName: "D",
+      email: "a@b.com",
+      birthDate: "1998-05-05",
+      zip: "92000",
+      city: "Paris",
+    }),
+  ).toThrow("Email déjà utilisé");
+
+  expect(store.getError).toBe("Email déjà utilisé");
+});
+
+test("store action: clearError()", async () => {
+  localStorage.clear();
+  await renderWithPlugins();
+
+  const store = useUsersStore();
+
+  // crée une erreur
+  store.addUser({
+    firstName: "A",
+    lastName: "B",
+    email: "a@b.com",
+    birthDate: "1998-05-05",
+    zip: "92000",
+    city: "Paris",
+  });
+
+  try {
+    store.addUser({
+      firstName: "C",
+      lastName: "D",
+      email: "a@b.com",
+      birthDate: "1998-05-05",
+      zip: "92000",
+      city: "Paris",
+    });
+  } catch {}
+
+  expect(store.getError).toBe("Email déjà utilisé");
+
+  store.clearError();
+  expect(store.getError).toBeNull();
+});
+
+async function renderWithPlugins(component = UserForm) {
+  const pinia = createPinia();
+  setActivePinia(pinia);
+
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: "/", name: "home", component: { template: "<div>Home</div>" } },
+      { path: "/register", name: "register", component },
+    ],
+  });
+
+  router.push("/register");
+  await router.isReady();
+
+  return render(component, {
+    global: {
+      plugins: [pinia, router],
+    },
+  });
+}
 
 async function fillValidForm(user, overrides = {}) {
   const formValues = {
@@ -47,25 +143,25 @@ async function fillValidForm(user, overrides = {}) {
 }
 
 describe("UserForm (Integration)", () => {
-  test("1) user: invalid input -> errors red + button disabled/grey -> valid input -> localStorage + toast + reset", async () => {
+  test("1) user: invalid input -> errors + button disabled -> valid input -> localStorage(users) + toast + reset", async () => {
     const user = userEvent.setup();
     localStorage.clear();
 
-    render(UserForm);
+    await renderWithPlugins();
 
     const submitButton = screen.getByRole("button", { name: /envoyer/i });
 
     // sécurité UI
     expect(submitButton).toBeDisabled();
-    expect(submitButton).toHaveStyle({ opacity: "0.5" });
+    expect(submitButton).toHaveClass("form-button--disabled");
 
-    // blur sur Nom => erreur visible et rouge
+    // blur sur Nom => erreur visible
     await user.click(screen.getByTestId("lastName-input"));
     await user.tab();
 
     const lastNameError = screen.getByTestId("error-lastName");
     expect(lastNameError).toBeVisible();
-    expect(lastNameError).toHaveStyle({ color: "red" });
+    expect(lastNameError).toHaveClass("error-message");
 
     // saisies invalides
     await user.type(screen.getByTestId("email-input"), "nope@");
@@ -104,17 +200,18 @@ describe("UserForm (Integration)", () => {
 
     // devenu valide
     expect(submitButton).not.toBeDisabled();
-    expect(submitButton).toHaveStyle({ opacity: "1" });
+    expect(submitButton).not.toHaveClass("form-button--disabled");
 
     // submit
     await user.click(submitButton);
 
-    // localStorage rempli
-    const raw = localStorage.getItem("userForm");
+    // localStorage rempli (users)
+    const raw = localStorage.getItem("users");
     expect(raw).not.toBeNull();
-    const savedData = JSON.parse(raw);
 
-    expect(savedData).toEqual({
+    const savedUsers = JSON.parse(raw);
+    expect(savedUsers).toHaveLength(1);
+    expect(savedUsers[0]).toEqual({
       lastName: "VALUN",
       firstName: "Youen",
       email: "youen@test.com",
@@ -137,7 +234,7 @@ describe("UserForm (Integration)", () => {
 
   test("2) birthDate empty => shows 'Birth date is required'", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     await user.click(screen.getByTestId("birthDate-input"));
     await user.tab();
@@ -147,11 +244,29 @@ describe("UserForm (Integration)", () => {
     );
   });
 
-  test("3) birthDate minor => shows 'Pegi 18' + button stays disabled", async () => {
+  test("3) birthDate invalid input on <input type=date> => treated as empty => shows 'Birth date is required'", async () => {
     const user = userEvent.setup();
     localStorage.clear();
 
-    render(UserForm);
+    await renderWithPlugins();
+
+    const input = screen.getByTestId("birthDate-input");
+
+    await user.clear(input);
+    await user.type(input, "not-a-date");
+    await user.tab();
+
+    expect(screen.getByTestId("error-birthDate")).toHaveTextContent(
+      "Birth date is required",
+    );
+    expect(localStorage.getItem("users")).toBeNull();
+  });
+
+  test("4) birthDate minor => shows 'Pegi 18' + button stays disabled", async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+
+    await renderWithPlugins();
 
     await fillValidForm(user, { birthDate: "2015-01-01" });
 
@@ -159,14 +274,14 @@ describe("UserForm (Integration)", () => {
 
     const submitButton = screen.getByRole("button", { name: /envoyer/i });
     expect(submitButton).toBeDisabled();
-    expect(submitButton).toHaveStyle({ opacity: "0.5" });
+    expect(submitButton).toHaveClass("form-button--disabled");
 
-    expect(localStorage.getItem("userForm")).toBeNull();
+    expect(localStorage.getItem("users")).toBeNull();
   });
 
-  test("4) identity with HTML tags => shows 'HTML tags are not allowed in identity'", async () => {
+  test("5) identity with HTML tags => shows 'HTML tags are not allowed in identity'", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     await user.type(screen.getByTestId("firstName-input"), "<b>Bob</b>");
     await user.type(screen.getByTestId("lastName-input"), "VALUN");
@@ -174,15 +289,15 @@ describe("UserForm (Integration)", () => {
 
     const firstNameError = screen.getByTestId("error-firstName");
     expect(firstNameError).toBeVisible();
-    expect(firstNameError).toHaveStyle({ color: "red" });
+    expect(firstNameError).toHaveClass("error-message");
     expect(firstNameError).toHaveTextContent(
       "HTML tags are not allowed in identity",
     );
   });
 
-  test("5) identity invalid format (digits) => shows 'Invalid identity format' and button disabled", async () => {
+  test("6) identity invalid format (digits) => shows 'Invalid identity format' and button disabled", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     await user.type(screen.getByTestId("firstName-input"), "Youen");
     await user.type(screen.getByTestId("lastName-input"), "VALUN123");
@@ -195,9 +310,9 @@ describe("UserForm (Integration)", () => {
     expect(screen.getByRole("button", { name: /envoyer/i })).toBeDisabled();
   });
 
-  test("6) email: empty -> 'Email is required' then invalid -> 'Invalid email format' then valid -> error disappears", async () => {
+  test("7) email: empty -> 'Email is required' then invalid -> 'Invalid email format' then valid -> error disappears", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     // vide + blur
     await user.click(screen.getByTestId("email-input"));
@@ -221,9 +336,9 @@ describe("UserForm (Integration)", () => {
     expect(screen.queryByTestId("error-email")).toBeNull();
   });
 
-  test("7) zip: empty -> 'Zip required' then letters -> 'Zip code wrong length' then 4 digits -> wrong length then 5 digits -> error disappears", async () => {
+  test("8) zip: empty -> 'Zip required' then letters -> 'Zip code wrong length' then 4 digits -> wrong length then 5 digits -> error disappears", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     // vide + blur
     await user.click(screen.getByTestId("zip-input"));
@@ -253,26 +368,26 @@ describe("UserForm (Integration)", () => {
     expect(screen.queryByTestId("error-zip")).toBeNull();
   });
 
-  test("8) city empty => shows 'City is required' + button stays disabled", async () => {
+  test("9) city empty => shows 'City is required' + button stays disabled", async () => {
     const user = userEvent.setup();
-    render(UserForm);
+    await renderWithPlugins();
 
     await fillValidForm(user, { city: "" });
     await user.tab();
 
     const cityError = screen.getByTestId("error-city");
     expect(cityError).toBeVisible();
-    expect(cityError).toHaveStyle({ color: "red" });
+    expect(cityError).toHaveClass("error-message");
     expect(cityError).toHaveTextContent("City is required");
 
     expect(screen.getByRole("button", { name: /envoyer/i })).toBeDisabled();
   });
 
-  test("9) invalid submit => does NOT write localStorage and shows errors (markAllTouched)", async () => {
+  test("10) invalid submit => does NOT write localStorage(users) and shows errors (markAllTouched)", async () => {
     const user = userEvent.setup();
     localStorage.clear();
 
-    render(UserForm);
+    await renderWithPlugins();
 
     // Formulaire volontairement invalide
     await user.type(screen.getByTestId("lastName-input"), "VALUN");
@@ -281,10 +396,42 @@ describe("UserForm (Integration)", () => {
 
     await user.click(screen.getByRole("button", { name: /envoyer/i }));
 
-    // pas de localStorage
-    expect(localStorage.getItem("userForm")).toBeNull();
+    // pas de localStorage (users)
+    expect(localStorage.getItem("users")).toBeNull();
 
-    // erreurs visibles quelque part (au moins email)
+    // erreurs visibles (au moins email)
     expect(screen.getByTestId("error-email")).toBeVisible();
+  });
+
+  test("11) duplicate email => shows 'Email déjà utilisé' + users unchanged", async () => {
+    const user = userEvent.setup();
+    localStorage.clear();
+
+    await renderWithPlugins();
+
+    const submitButton = screen.getByRole("button", { name: /envoyer/i });
+
+    // 1) Crée un utilisateur valide
+    await fillValidForm(user);
+    await user.click(submitButton);
+
+    const firstRaw = localStorage.getItem("users");
+    expect(firstRaw).not.toBeNull();
+    const firstUsers = JSON.parse(firstRaw);
+    expect(firstUsers).toHaveLength(1);
+
+    // 2) Ré-essaye avec le même email
+    await fillValidForm(user, { email: "youen@test.com" });
+    await user.click(submitButton);
+
+    // 3) Message d'erreur affiché (serverError)
+    // (le <p v-if="serverError" role="alert"> existe)
+    expect(screen.getByRole("alert")).toHaveTextContent("Email déjà utilisé");
+
+    // 4) Users inchangé
+    const secondRaw = localStorage.getItem("users");
+    const secondUsers = JSON.parse(secondRaw);
+    expect(secondUsers).toHaveLength(1);
+    expect(secondUsers[0].email).toBe("youen@test.com");
   });
 });
