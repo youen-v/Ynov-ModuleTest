@@ -64,7 +64,7 @@ const userCount = computed(() => usersStore.userCount);
 }
 
 .user-list-title {
-  color: #ffffff;
+  color: #acacac;
   font-size: 20px;
   margin-bottom: 15px;
 }
