@@ -42,6 +42,19 @@ export const useUsersStore = defineStore("users", {
       try {
         await axios.post("https://jsonplaceholder.typicode.com/users", user);
       } catch (error) {
+        const status = error?.response?.status;
+        const backendMsg = error?.response?.data?.message;
+
+        if (status === 400 && backendMsg) {
+          this.error = backendMsg;
+          throw new Error(this.error);
+        }
+
+        if (status >= 500) {
+          this.error = "Serveur indisponible, réessaie plus tard";
+          throw new Error(this.error);
+        }
+
         this.error = "Erreur survenue dans l'envoi du formulaire";
         throw new Error(this.error);
       }

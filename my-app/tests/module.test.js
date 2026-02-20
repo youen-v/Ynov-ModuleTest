@@ -90,7 +90,6 @@ describe("useUsersStore (unit)", () => {
 
     expect(store.loading).toBe(false);
     expect(store.getError).toBe("Erreur lors du chargement des utilisateurs");
-    // on garde l'état précédent (ton code ne le reset pas en catch)
     expect(store.users).toEqual([{ email: "keep@me.com" }]);
   });
 
@@ -100,7 +99,6 @@ describe("useUsersStore (unit)", () => {
     const { useUsersStore } = await import("@/stores/users");
     const store = useUsersStore();
 
-    // on simule une erreur précédente
     store.error = "Old error";
 
     const newUser = { email: "new@user.com", firstName: "New" };
@@ -145,10 +143,6 @@ describe("useUsersStore (unit)", () => {
     );
 
     expect(store.getError).toBe("Erreur survenue dans l'envoi du formulaire");
-
-    // IMPORTANT: ton code push AVANT le POST,
-    // donc l'utilisateur reste dans le state même si le POST échoue.
-    // (Si tu veux un comportement "rollback", dis-moi et je t'explique le changement.)
     expect(store.userCount).toBe(1);
     expect(store.users[0]).toEqual(newUser);
   });
@@ -165,7 +159,7 @@ describe("useUsersStore (unit)", () => {
 });
 
 test("store getters: userCount + getError", async () => {
-  axios.get.mockResolvedValueOnce({ data: [] }); // si top-level await dans le store
+  axios.get.mockResolvedValueOnce({ data: [] });
 
   const { useUsersStore } = await import("@/stores/users");
   const store = useUsersStore();
@@ -543,7 +537,6 @@ describe("UserForm (Integration)", () => {
     await fillValidForm(user);
     await user.click(submitButton);
 
-    // ✅ Vérif via store (plus de localStorage)
     const { useUsersStore } = await import("@/stores/users");
     const store = useUsersStore();
 
@@ -560,5 +553,39 @@ describe("UserForm (Integration)", () => {
     // 4) Users inchangé
     expect(store.userCount).toBe(1);
     expect(store.users[0].email).toBe("youen@test.com");
+  });
+
+  test("12) API 400 (métier) => affiche le message spécifique du back", async () => {
+    const user = userEvent.setup();
+
+    axios.post.mockRejectedValueOnce({
+      response: { status: 400, data: { message: "Email déjà utilisé" } },
+    });
+
+    await renderWithPlugins();
+    await fillValidForm(user, { email: "dup@test.com" });
+
+    await user.click(screen.getByRole("button", { name: /envoyer/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Email déjà utilisé",
+    );
+  });
+
+  test("13) API 500 (serveur down) => l'app ne plante pas et affiche une alerte user-friendly", async () => {
+    const user = userEvent.setup();
+
+    axios.post.mockRejectedValueOnce({
+      response: { status: 500, data: { message: "Internal Server Error" } },
+    });
+
+    await renderWithPlugins();
+    await fillValidForm(user, { email: "boom@test.com" });
+
+    await user.click(screen.getByRole("button", { name: /envoyer/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Serveur indisponible, réessaie plus tard",
+    );
   });
 });

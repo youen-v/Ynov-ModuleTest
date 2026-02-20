@@ -243,7 +243,7 @@ function validateCurrentForm() {
     errors.zip = normalizeErrorMessage(error);
   }
 
-  // City (règle UI)
+  // City
   if (!formData.city || formData.city.trim() === "") {
     errors.city = "City is required";
   }
@@ -274,25 +274,22 @@ function resetForm() {
   serverError.value = "";
 }
 
-const submitForm = async () => {
+async function submitForm() {
   markAllTouched();
-
   if (!isFormValid.value) return;
 
   try {
     await usersStore.addUser({ ...formData });
     toasterMessage.value = "Enregistré";
-
-    resetForm();
     setTimeout(() => {
       toasterMessage.value = "";
       router.push("/");
     }, 2000);
+    resetForm();
   } catch (error) {
-    serverError.value =
-      error instanceof Error ? error.message : "Erreur";
+    serverError.value = error?.message ?? "Erreur";
   }
-};
+}
 </script>
 
 <style scoped>
