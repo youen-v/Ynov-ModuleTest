@@ -460,7 +460,8 @@
 <a name='L395'></a><a href='#L395'>395</a>
 <a name='L396'></a><a href='#L396'>396</a>
 <a name='L397'></a><a href='#L397'>397</a>
-<a name='L398'></a><a href='#L398'>398</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L398'></a><a href='#L398'>398</a>
+<a name='L399'></a><a href='#L399'>399</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
@@ -772,12 +773,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -848,8 +849,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">287x</span>
-<span class="cline-any cline-yes">287x</span>
+<span class="cline-any cline-yes">283x</span>
+<span class="cline-any cline-yes">283x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1133,23 +1135,25 @@ function resetForm() {
   serverError.value = "";
 }
 &nbsp;
-function submitForm() {
+const submitForm = async () =&gt; {
   markAllTouched();
 &nbsp;
   if (!isFormValid.value) return;
 &nbsp;
   try {
-    usersStore.addUser({ ...formData });
+    await usersStore.addUser({ ...formData });
     toasterMessage.value = "Enregistré";
+&nbsp;
+    resetForm();
     setTimeout(() =&gt; {
       toasterMessage.value = "";
-      router.push('/');
+      router.push("/");
     }, 2000);
-    resetForm();
   } catch (error) {
-   touchedFields.email = true;
+    serverError.value =
+      error instanceof Error ? error.message : "Erreur";
   }
-}
+};
 &lt;/script&gt;
 &nbsp;
 &lt;style scoped&gt;
@@ -1167,14 +1171,13 @@ function submitForm() {
   border-radius: 10px;
   padding: 30px;
   width: 100%;
-  max-width: 500px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-}<span class="branch-3 cbranch-no" title="branch not covered" ><span class="branch-2 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span></span>
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
-.form-tit<span class="fstat-no" title="function not covered" >le {<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ></span></span></span></span></span></span>
-  color: <span class="fstat-no" title="function not covered" >#ffffff;<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ></span></span></span>
-  text-align: center;<span class="missing-if-branch" title="else path not taken" >E</span>
-  margin-bottom: 25px;<span class="branch-1 cbranch-no" title="branch not covered" ></span>
+  max-width: 500px;<span class="branch-3 cbranch-no" title="branch not covered" ><span class="branch-2 cbranch-no" title="branch not covered" ><span class="branch-1 cbranch-no" title="branch not covered" ></span></span></span>
+}<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span>
+<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ></span></span></span></span></span></span>
+.form-tit<span class="fstat-no" title="function not covered" >le {<span class="cstat-no" title="statement not covered" ><span class="cstat-no" title="statement not covered" ></span></span></span>
+  color: #ffffff;<span class="missing-if-branch" title="else path not taken" >E</span>
+  text-align: center;<span class="branch-1 cbranch-no" title="branch not covered" ></span>
+  margin-bottom: 25px;
   font-size: 24px;
 }
 &nbsp;
@@ -1261,7 +1264,7 @@ function submitForm() {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-19T16:45:35.441Z
+                at 2026-02-20T14:19:50.611Z
             </div>
         <script src="../prettify.js"></script>
         <script>

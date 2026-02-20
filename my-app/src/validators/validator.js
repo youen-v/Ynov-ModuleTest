@@ -81,8 +81,11 @@ export function validateIdentity(identity) {
 
   const { firstName, lastName } = identity;
 
-  if (!firstName || !lastName) {
-    throw new Error("firstName and lastName are required");
+  if (!firstName) {
+    throw new Error("firstName are required");
+  }
+  if (!lastName) {
+    throw new Error("lastName are required");
   }
   if (typeof firstName !== "string" || typeof lastName !== "string") {
     throw new Error("firstName/lastName must be strings");

@@ -1,74 +1,201 @@
-import { render, screen, fireEvent } from "@testing-library/vue";
+jest.mock("axios", () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+    post: jest.fn(),
+  },
+}));
+
+import axios from "axios";
+import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
-import UserForm from "../src/views/UserForm.vue";
+import UserForm from "@/views/UserForm.vue";
 import { createPinia, setActivePinia } from "pinia";
 import { createRouter, createMemoryHistory } from "vue-router";
-import { useUsersStore } from "@/stores/users"; // en haut du test file
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  setActivePinia(createPinia());
+  axios.post.mockResolvedValue({ data: {} });
+});
+
+describe("useUsersStore (unit)", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    setActivePinia(createPinia());
+  });
+
+  test("getters: userCount / getError (initial state)", async () => {
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    expect(store.users).toEqual([]);
+    expect(store.userCount).toBe(0);
+    expect(store.getError).toBeNull();
+    expect(store.loading).toBe(false);
+  });
+
+  test("fetchUsers(): success -> fills users + toggles loading", async () => {
+    const apiUsers = [
+      { id: 1, email: "a@b.com", name: "A" },
+      { id: 2, email: "c@d.com", name: "C" },
+    ];
+    axios.get.mockResolvedValueOnce({ data: apiUsers });
+
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    const p = store.fetchUsers();
+
+    // juste après l'appel
+    expect(store.loading).toBe(true);
+    expect(store.getError).toBeNull();
+
+    await p;
+
+    expect(axios.get).toHaveBeenCalledWith(
+      "https://jsonplaceholder.typicode.com/users",
+    );
+    expect(store.loading).toBe(false);
+    expect(store.getError).toBeNull();
+    expect(store.users).toEqual(apiUsers);
+    expect(store.userCount).toBe(2);
+  });
+
+  test("fetchUsers(): success with null/undefined data -> users becomes []", async () => {
+    axios.get.mockResolvedValueOnce({ data: null });
+
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    store.users = [{ email: "existing@x.com" }];
+
+    await store.fetchUsers();
+
+    expect(store.users).toEqual([]);
+    expect(store.userCount).toBe(0);
+    expect(store.loading).toBe(false);
+    expect(store.getError).toBeNull();
+  });
+
+  test("fetchUsers(): error -> sets error message + loading false + keeps users", async () => {
+    axios.get.mockRejectedValueOnce(new Error("Network"));
+
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    store.users = [{ email: "keep@me.com" }];
+
+    await store.fetchUsers();
+
+    expect(store.loading).toBe(false);
+    expect(store.getError).toBe("Erreur lors du chargement des utilisateurs");
+    // on garde l'état précédent (ton code ne le reset pas en catch)
+    expect(store.users).toEqual([{ email: "keep@me.com" }]);
+  });
+
+  test("addUser(): success -> adds user + calls POST + clears error", async () => {
+    axios.post.mockResolvedValueOnce({ data: {} });
+
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    // on simule une erreur précédente
+    store.error = "Old error";
+
+    const newUser = { email: "new@user.com", firstName: "New" };
+
+    await store.addUser(newUser);
+
+    expect(store.getError).toBeNull();
+    expect(store.userCount).toBe(1);
+    expect(store.users[0]).toEqual(newUser);
+
+    expect(axios.post).toHaveBeenCalledWith(
+      "https://jsonplaceholder.typicode.com/users",
+      newUser,
+    );
+  });
+
+  test("addUser(): duplicate email -> throws + sets error + does NOT call POST + does NOT add", async () => {
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    store.users = [{ email: "dup@user.com" }];
+
+    await expect(store.addUser({ email: "dup@user.com" })).rejects.toThrow(
+      "Email déjà utilisé",
+    );
+
+    expect(store.getError).toBe("Email déjà utilisé");
+    expect(store.userCount).toBe(1);
+    expect(axios.post).not.toHaveBeenCalled();
+  });
+
+  test("addUser(): POST fails -> throws + sets error + still has pushed user (current implementation)", async () => {
+    axios.post.mockRejectedValueOnce(new Error("500"));
+
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    const newUser = { email: "boom@user.com" };
+
+    await expect(store.addUser(newUser)).rejects.toThrow(
+      "Erreur survenue dans l'envoi du formulaire",
+    );
+
+    expect(store.getError).toBe("Erreur survenue dans l'envoi du formulaire");
+
+    // IMPORTANT: ton code push AVANT le POST,
+    // donc l'utilisateur reste dans le state même si le POST échoue.
+    // (Si tu veux un comportement "rollback", dis-moi et je t'explique le changement.)
+    expect(store.userCount).toBe(1);
+    expect(store.users[0]).toEqual(newUser);
+  });
+
+  test("clearError(): sets error to null", async () => {
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    store.error = "Some error";
+    store.clearError();
+
+    expect(store.getError).toBeNull();
+  });
+});
 
 test("store getters: userCount + getError", async () => {
-  localStorage.clear();
+  axios.get.mockResolvedValueOnce({ data: [] }); // si top-level await dans le store
 
-  await renderWithPlugins();
-
+  const { useUsersStore } = await import("@/stores/users");
   const store = useUsersStore();
 
   expect(store.userCount).toBe(0);
   expect(store.getError).toBeNull();
 
-  // ajoute un user
-  store.addUser({
-    firstName: "A",
-    lastName: "B",
-    email: "a@b.com",
-    birthDate: "1998-05-05",
-    zip: "92000",
-    city: "Paris",
-  });
+  axios.post.mockResolvedValueOnce({ data: {} });
+  await store.addUser({ email: "a@b.com" });
 
-  expect(store.userCount).toBe(1);
-  expect(store.getError).toBeNull();
+  expect(axios.post).toHaveBeenCalledWith(
+    "https://jsonplaceholder.typicode.com/users",
+    { email: "a@b.com" },
+  );
 
-  // force l'erreur via doublon
-  expect(() =>
-    store.addUser({
-      firstName: "C",
-      lastName: "D",
-      email: "a@b.com",
-      birthDate: "1998-05-05",
-      zip: "92000",
-      city: "Paris",
-    }),
-  ).toThrow("Email déjà utilisé");
-
-  expect(store.getError).toBe("Email déjà utilisé");
+  await expect(store.addUser({ email: "a@b.com" })).rejects.toThrow(
+    "Email déjà utilisé",
+  );
 });
 
 test("store action: clearError()", async () => {
-  localStorage.clear();
-  await renderWithPlugins();
+  axios.get.mockResolvedValueOnce({ data: [] });
 
+  const { useUsersStore } = await import("@/stores/users");
   const store = useUsersStore();
 
-  // crée une erreur
-  store.addUser({
-    firstName: "A",
-    lastName: "B",
-    email: "a@b.com",
-    birthDate: "1998-05-05",
-    zip: "92000",
-    city: "Paris",
-  });
+  axios.post.mockResolvedValue({ data: {} });
 
-  try {
-    store.addUser({
-      firstName: "C",
-      lastName: "D",
-      email: "a@b.com",
-      birthDate: "1998-05-05",
-      zip: "92000",
-      city: "Paris",
-    });
-  } catch {}
+  await store.addUser({ email: "a@b.com" });
+  await expect(store.addUser({ email: "a@b.com" })).rejects.toThrow();
 
   expect(store.getError).toBe("Email déjà utilisé");
 
@@ -145,7 +272,6 @@ async function fillValidForm(user, overrides = {}) {
 describe("UserForm (Integration)", () => {
   test("1) user: invalid input -> errors + button disabled -> valid input -> localStorage(users) + toast + reset", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
 
     await renderWithPlugins();
 
@@ -205,13 +331,11 @@ describe("UserForm (Integration)", () => {
     // submit
     await user.click(submitButton);
 
-    // localStorage rempli (users)
-    const raw = localStorage.getItem("users");
-    expect(raw).not.toBeNull();
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
 
-    const savedUsers = JSON.parse(raw);
-    expect(savedUsers).toHaveLength(1);
-    expect(savedUsers[0]).toEqual({
+    expect(store.userCount).toBe(1);
+    expect(store.users[0]).toMatchObject({
       lastName: "VALUN",
       firstName: "Youen",
       email: "youen@test.com",
@@ -246,7 +370,6 @@ describe("UserForm (Integration)", () => {
 
   test("3) birthDate invalid input on <input type=date> => treated as empty => shows 'Birth date is required'", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
 
     await renderWithPlugins();
 
@@ -259,12 +382,13 @@ describe("UserForm (Integration)", () => {
     expect(screen.getByTestId("error-birthDate")).toHaveTextContent(
       "Birth date is required",
     );
-    expect(localStorage.getItem("users")).toBeNull();
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+    expect(store.userCount).toBe(0);
   });
 
   test("4) birthDate minor => shows 'Pegi 18' + button stays disabled", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
 
     await renderWithPlugins();
 
@@ -276,7 +400,9 @@ describe("UserForm (Integration)", () => {
     expect(submitButton).toBeDisabled();
     expect(submitButton).toHaveClass("form-button--disabled");
 
-    expect(localStorage.getItem("users")).toBeNull();
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+    expect(store.userCount).toBe(0);
   });
 
   test("5) identity with HTML tags => shows 'HTML tags are not allowed in identity'", async () => {
@@ -385,7 +511,6 @@ describe("UserForm (Integration)", () => {
 
   test("10) invalid submit => does NOT write localStorage(users) and shows errors (markAllTouched)", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
 
     await renderWithPlugins();
 
@@ -396,8 +521,9 @@ describe("UserForm (Integration)", () => {
 
     await user.click(screen.getByRole("button", { name: /envoyer/i }));
 
-    // pas de localStorage (users)
-    expect(localStorage.getItem("users")).toBeNull();
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+    expect(store.userCount).toBe(0);
 
     // erreurs visibles (au moins email)
     expect(screen.getByTestId("error-email")).toBeVisible();
@@ -405,9 +531,11 @@ describe("UserForm (Integration)", () => {
 
   test("11) duplicate email => shows 'Email déjà utilisé' + users unchanged", async () => {
     const user = userEvent.setup();
-    localStorage.clear();
 
     await renderWithPlugins();
+
+    // important: mock du post sinon addUser peut throw et ne rien ajouter
+    axios.post.mockResolvedValue({ data: {} });
 
     const submitButton = screen.getByRole("button", { name: /envoyer/i });
 
@@ -415,23 +543,22 @@ describe("UserForm (Integration)", () => {
     await fillValidForm(user);
     await user.click(submitButton);
 
-    const firstRaw = localStorage.getItem("users");
-    expect(firstRaw).not.toBeNull();
-    const firstUsers = JSON.parse(firstRaw);
-    expect(firstUsers).toHaveLength(1);
+    // ✅ Vérif via store (plus de localStorage)
+    const { useUsersStore } = await import("@/stores/users");
+    const store = useUsersStore();
+
+    expect(store.userCount).toBe(1);
+    expect(store.users[0].email).toBe("youen@test.com");
 
     // 2) Ré-essaye avec le même email
     await fillValidForm(user, { email: "youen@test.com" });
     await user.click(submitButton);
 
-    // 3) Message d'erreur affiché (serverError)
-    // (le <p v-if="serverError" role="alert"> existe)
+    // 3) Message d'erreur affiché
     expect(screen.getByRole("alert")).toHaveTextContent("Email déjà utilisé");
 
     // 4) Users inchangé
-    const secondRaw = localStorage.getItem("users");
-    const secondUsers = JSON.parse(secondRaw);
-    expect(secondUsers).toHaveLength(1);
-    expect(secondUsers[0].email).toBe("youen@test.com");
+    expect(store.userCount).toBe(1);
+    expect(store.users[0].email).toBe("youen@test.com");
   });
 });

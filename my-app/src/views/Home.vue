@@ -7,8 +7,12 @@
       <div v-if="userCount > 0" class="user-list-container">
         <h2 class="user-list-title">Liste des utilisateurs inscrits</h2>
         <ul class="user-list">
-          <li v-for="user in users" :key="user.email" class="user-item">
-            {{ user.firstName }} {{ user.lastName }}
+          <li
+            v-for="user in users"
+            :key="user.id ?? user.email"
+            class="user-item"
+          >
+            {{ user.name }}
           </li>
         </ul>
       </div>
@@ -20,10 +24,15 @@
 </template>
 
 <script setup>
-import { useUsersStore } from '@/stores/users';
-import { computed } from 'vue';
+import { useUsersStore } from "@/stores/users";
+import { computed, onMounted } from "vue";
 
 const usersStore = useUsersStore();
+
+onMounted(async () => {
+  await usersStore.fetchUsers();
+});
+
 const users = computed(() => usersStore.users);
 const userCount = computed(() => usersStore.userCount);
 </script>

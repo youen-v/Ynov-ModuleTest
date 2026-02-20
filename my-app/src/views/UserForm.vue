@@ -274,23 +274,25 @@ function resetForm() {
   serverError.value = "";
 }
 
-function submitForm() {
+const submitForm = async () => {
   markAllTouched();
 
   if (!isFormValid.value) return;
 
   try {
-    usersStore.addUser({ ...formData });
+    await usersStore.addUser({ ...formData });
     toasterMessage.value = "Enregistré";
+
+    resetForm();
     setTimeout(() => {
       toasterMessage.value = "";
-      router.push('/');
+      router.push("/");
     }, 2000);
-    resetForm();
   } catch (error) {
-   touchedFields.email = true;
+    serverError.value =
+      error instanceof Error ? error.message : "Erreur";
   }
-}
+};
 </script>
 
 <style scoped>

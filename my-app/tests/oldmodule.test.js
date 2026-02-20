@@ -112,17 +112,15 @@ describe("validateIdentity", () => {
   it("erreur si null/undefined/objet vide", () => {
     expect(() => validateIdentity(null)).toThrow("Identity is required");
     expect(() => validateIdentity(undefined)).toThrow("Identity is required");
-    expect(() => validateIdentity({})).toThrow(
-      "firstName and lastName are required",
-    );
+    expect(() => validateIdentity({})).toThrow("firstName are required");
   });
 
   it("erreur si champs manquants", () => {
     expect(() => validateIdentity({ firstName: "Jean" })).toThrow(
-      "firstName and lastName are required",
+      "lastName are required",
     );
     expect(() => validateIdentity({ lastName: "Dupont" })).toThrow(
-      "firstName and lastName are required",
+      "firstName are required",
     );
   });
 
@@ -169,7 +167,7 @@ describe("validateIdentity", () => {
 
     expect(() =>
       validateIdentity({ firstName: null, lastName: "Dupont" }),
-    ).toThrow("firstName and lastName are required");
+    ).toThrow("firstName are required");
   });
 });
 

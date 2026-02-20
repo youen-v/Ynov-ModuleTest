@@ -1,27 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1771519535450" clover="3.2.0">
-  <project timestamp="1771519535450" name="All files">
-    <metrics statements="101" coveredstatements="98" conditionals="159" coveredconditionals="134" methods="37" coveredmethods="34" elements="297" coveredelements="266" complexity="0" loc="101" ncloc="101" packages="3" files="4" classes="4"/>
+<coverage generated="1771597190621" clover="3.2.0">
+  <project timestamp="1771597190621" name="All files">
+    <metrics statements="113" coveredstatements="110" conditionals="159" coveredconditionals="134" methods="38" coveredmethods="35" elements="310" coveredelements="279" complexity="0" loc="113" ncloc="113" packages="3" files="4" classes="4"/>
     <package name="stores">
-      <metrics statements="12" coveredstatements="12" conditionals="4" coveredconditionals="4" methods="6" coveredmethods="6"/>
+      <metrics statements="22" coveredstatements="22" conditionals="4" coveredconditionals="4" methods="7" coveredmethods="7"/>
       <file name="users.js" path="/Users/youenvalun/Documents/Ynov-ModuleTest/my-app/src/stores/users.js">
-        <metrics statements="12" coveredstatements="12" conditionals="4" coveredconditionals="4" methods="6" coveredmethods="6"/>
-        <line num="3" count="1" type="stmt"/>
-        <line num="4" count="14" type="stmt"/>
-        <line num="9" count="2" type="stmt"/>
-        <line num="10" count="4" type="stmt"/>
-        <line num="14" count="7" type="stmt"/>
-        <line num="15" count="7" type="cond" truecount="2" falsecount="0"/>
+        <metrics statements="22" coveredstatements="22" conditionals="4" coveredconditionals="4" methods="7" coveredmethods="7"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="5" count="21" type="stmt"/>
+        <line num="11" count="12" type="stmt"/>
+        <line num="12" count="11" type="stmt"/>
         <line num="16" count="3" type="stmt"/>
         <line num="17" count="3" type="stmt"/>
-        <line num="19" count="4" type="stmt"/>
-        <line num="20" count="4" type="stmt"/>
-        <line num="21" count="4" type="stmt"/>
-        <line num="24" count="1" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+        <line num="23" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="25" count="1" type="stmt"/>
+        <line num="27" count="3" type="stmt"/>
+        <line num="32" count="10" type="stmt"/>
+        <line num="33" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="34" count="4" type="stmt"/>
+        <line num="35" count="4" type="stmt"/>
+        <line num="38" count="6" type="stmt"/>
+        <line num="40" count="6" type="stmt"/>
+        <line num="42" count="6" type="stmt"/>
+        <line num="43" count="6" type="stmt"/>
+        <line num="45" count="1" type="stmt"/>
+        <line num="46" count="1" type="stmt"/>
+        <line num="51" count="2" type="stmt"/>
       </file>
     </package>
     <package name="validators">
-      <metrics statements="40" coveredstatements="40" conditionals="46" coveredconditionals="46" methods="5" coveredmethods="5"/>
+      <metrics statements="42" coveredstatements="42" conditionals="46" coveredconditionals="46" methods="5" coveredmethods="5"/>
       <file name="module.js" path="/Users/youenvalun/Documents/Ynov-ModuleTest/my-app/src/validators/module.js">
         <metrics statements="5" coveredstatements="5" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
         <line num="9" count="71" type="cond" truecount="2" falsecount="0"/>
@@ -31,42 +41,44 @@
         <line num="15" count="54" type="stmt"/>
       </file>
       <file name="validator.js" path="/Users/youenvalun/Documents/Ynov-ModuleTest/my-app/src/validators/validator.js">
-        <metrics statements="35" coveredstatements="35" conditionals="44" coveredconditionals="44" methods="4" coveredmethods="4"/>
+        <metrics statements="37" coveredstatements="37" conditionals="44" coveredconditionals="44" methods="4" coveredmethods="4"/>
         <line num="12" count="53" type="stmt"/>
         <line num="14" count="53" type="cond" truecount="2" falsecount="0"/>
         <line num="15" count="12" type="stmt"/>
         <line num="18" count="41" type="stmt"/>
-        <line num="29" count="283" type="cond" truecount="5" falsecount="0"/>
-        <line num="30" count="190" type="stmt"/>
+        <line num="29" count="280" type="cond" truecount="5" falsecount="0"/>
+        <line num="30" count="187" type="stmt"/>
         <line num="32" count="93" type="cond" truecount="2" falsecount="0"/>
         <line num="33" count="1" type="stmt"/>
         <line num="35" count="92" type="cond" truecount="2" falsecount="0"/>
         <line num="36" count="65" type="stmt"/>
         <line num="38" count="27" type="stmt"/>
-        <line num="50" count="284" type="cond" truecount="5" falsecount="0"/>
-        <line num="51" count="115" type="stmt"/>
+        <line num="50" count="281" type="cond" truecount="5" falsecount="0"/>
+        <line num="51" count="112" type="stmt"/>
         <line num="53" count="169" type="cond" truecount="2" falsecount="0"/>
         <line num="54" count="2" type="stmt"/>
         <line num="57" count="167" type="stmt"/>
         <line num="58" count="167" type="cond" truecount="2" falsecount="0"/>
         <line num="59" count="97" type="stmt"/>
         <line num="61" count="70" type="stmt"/>
-        <line num="75" count="290" type="cond" truecount="4" falsecount="0"/>
+        <line num="75" count="287" type="cond" truecount="4" falsecount="0"/>
         <line num="76" count="2" type="stmt"/>
-        <line num="78" count="288" type="cond" truecount="4" falsecount="0"/>
+        <line num="78" count="285" type="cond" truecount="4" falsecount="0"/>
         <line num="79" count="4" type="stmt"/>
-        <line num="82" count="284" type="stmt"/>
-        <line num="84" count="284" type="cond" truecount="4" falsecount="0"/>
-        <line num="85" count="108" type="stmt"/>
-        <line num="87" count="176" type="cond" truecount="4" falsecount="0"/>
-        <line num="88" count="2" type="stmt"/>
-        <line num="91" count="174" type="cond" truecount="2" falsecount="0"/>
-        <line num="92" count="174" type="cond" truecount="2" falsecount="0"/>
-        <line num="93" count="6" type="stmt"/>
-        <line num="95" count="168" type="stmt"/>
-        <line num="97" count="168" type="cond" truecount="4" falsecount="0"/>
-        <line num="98" count="5" type="stmt"/>
-        <line num="101" count="163" type="stmt"/>
+        <line num="82" count="281" type="stmt"/>
+        <line num="84" count="281" type="cond" truecount="2" falsecount="0"/>
+        <line num="85" count="89" type="stmt"/>
+        <line num="87" count="192" type="cond" truecount="2" falsecount="0"/>
+        <line num="88" count="16" type="stmt"/>
+        <line num="90" count="176" type="cond" truecount="4" falsecount="0"/>
+        <line num="91" count="2" type="stmt"/>
+        <line num="94" count="174" type="cond" truecount="2" falsecount="0"/>
+        <line num="95" count="174" type="cond" truecount="2" falsecount="0"/>
+        <line num="96" count="6" type="stmt"/>
+        <line num="98" count="168" type="stmt"/>
+        <line num="100" count="168" type="cond" truecount="4" falsecount="0"/>
+        <line num="101" count="5" type="stmt"/>
+        <line num="104" count="163" type="stmt"/>
       </file>
     </package>
     <package name="views">
@@ -78,12 +90,12 @@
         <line num="308" count="1" type="stmt"/>
         <line num="311" count="1" type="stmt"/>
         <line num="312" count="1" type="stmt"/>
-        <line num="313" count="14" type="cond" truecount="1" falsecount="3"/>
+        <line num="313" count="11" type="cond" truecount="1" falsecount="3"/>
         <line num="314" count="0" type="stmt"/>
         <line num="315" count="0" type="cond" truecount="0" falsecount="15"/>
         <line num="316" count="0" type="cond" truecount="0" falsecount="5"/>
-        <line num="317" count="14" type="cond" truecount="1" falsecount="1"/>
-        <line num="318" count="14" type="cond" truecount="2" falsecount="1"/>
+        <line num="317" count="11" type="cond" truecount="1" falsecount="1"/>
+        <line num="318" count="11" type="cond" truecount="2" falsecount="1"/>
         <line num="319" count="1" type="stmt"/>
         <line num="322" count="1" type="stmt"/>
         <line num="325" count="1" type="stmt"/>
@@ -100,8 +112,8 @@
         <line num="376" count="1" type="stmt"/>
         <line num="377" count="1" type="stmt"/>
         <line num="382" count="1" type="stmt"/>
-        <line num="389" count="287" type="stmt"/>
-        <line num="390" count="287" type="stmt"/>
+        <line num="389" count="283" type="stmt"/>
+        <line num="390" count="283" type="stmt"/>
         <line num="402" count="43" type="stmt"/>
         <line num="405" count="43" type="stmt"/>
         <line num="408" count="9" type="stmt"/>
@@ -120,7 +132,7 @@
         <line num="478" count="20" type="stmt"/>
         <line num="481" count="20" type="stmt"/>
         <line num="484" count="8" type="stmt"/>
-        <line num="498" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="498" count="11" type="cond" truecount="2" falsecount="0"/>
         <line num="502" count="1" type="stmt"/>
       </file>
     </package>
