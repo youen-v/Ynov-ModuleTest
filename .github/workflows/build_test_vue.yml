@@ -129,6 +129,8 @@ jobs:
         if: steps.versioncheck.outputs.should_publish != 'true'
         run: |
           echo "Skip: local version is not strictly greater than the published npm version."
+    env:
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   deploy:
     needs: publish_npm
