@@ -63,6 +63,42 @@ jobs:
         with:
           path: ./content
 
+  publish_npm:
+    needs: build_test_document
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: ${{ !contains(github.event.head_commit.message, 'updated version') }}
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          registry-url: https://registry.npmjs.org/
+
+      - name: Install dependencies
+        working-directory: ./my-app
+        run: npm ci
+
+      - name: build and publish package on NPM
+        working-directory: ./my-app
+        run: |
+          git config --global user.email "youen.valun@gmail.com"
+          git config --global user.name "youenv"
+          npm run build-npm
+          npm version patch
+          npm publish
+          git add -A
+          git commit -m "updated version" || echo "No changes to commit"
+          git push
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
   deploy:
     needs: build_test_document
     permissions:
