@@ -14,3 +14,4 @@ const usersStore = useUsersStore(pinia);
 usersStore.loadUsers?.();
 
 app.mount("#app");
+export default app;
