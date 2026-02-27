@@ -63,20 +63,6 @@ jobs:
         with:
           path: ./content
 
-      - name: build and publish package on NPM
-        working-directory: ./my-app
-        run: |
-          git config --global user.email "youen.valun@gmail.com"
-          git config --global user.name "youenv"
-          npm run build-npm
-          npm version patch
-          npm publish
-          git add .
-          git commit -m "updated version"
-          git push
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
   deploy:
     needs: build_test_document
     permissions:
