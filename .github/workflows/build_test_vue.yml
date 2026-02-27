@@ -127,7 +127,8 @@ publish_npm:
 
     - name: Skip publish (version not newer)
       if: steps.versioncheck.outputs.should_publish != 'true'
-      run: echo "Skip: local version is not strictly greater than the published npm version."
+      run: |
+        echo "Skip: local version is not strictly greater than the published npm version."
 
   deploy:
     needs: publish_npm
