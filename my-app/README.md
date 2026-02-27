@@ -120,3 +120,7 @@ Au `push` sur `main`, la pipeline:
 
 - Le routeur utilise `createWebHistory('/Ynov-ModuleTest/')`.
 - La base Vite est configurée sur `/Ynov-ModuleTest/` pour la compatibilité GitHub Pages.
+
+## Package NPM
+
+[Lien du package npm public](https://www.npmjs.com/package/ci-cd-youen-ynov)
