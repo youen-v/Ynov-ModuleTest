@@ -1,0 +1,21 @@
+# dev / repo
+.vscode
+.github
+coverage
+cypress
+tests
+docs
+node_modules
+*.log
+*.tgz
+
+# code sources
+src
+public
+index.html
+vite.config.*
+jest.config.*
+babel.config.*
+jsdoc.config.*
+jest.setup.*
+cypress.config.*

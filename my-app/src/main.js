@@ -3,6 +3,7 @@ import { createPinia } from "pinia";
 import App from "./App.vue";
 import router from "./router";
 import { useUsersStore } from "@/stores/users";
+import UserForm from "./views/UserForm.vue";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -14,4 +15,4 @@ const usersStore = useUsersStore(pinia);
 usersStore.loadUsers?.();
 
 app.mount("#app");
-export default app;
+export default UserForm;
