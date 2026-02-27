@@ -68,38 +68,38 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-  
+
     steps:
       - name: Clone repository
         uses: actions/checkout@v4
-  
+
       - name: Use Node.js 22.x
         uses: actions/setup-node@v4
         with:
           node-version: 22.x
           registry-url: https://registry.npmjs.org/
-  
+
       - name: Install dependencies
         working-directory: ./my-app
         run: npm ci
-  
+
       - name: Decide publish (compare versions)
         id: versioncheck
         working-directory: ./my-app
         shell: bash
         run: |
           set -e
-  
+
           PKG_NAME=$(node -p "require('./package.json').name")
           LOCAL_VERSION=$(node -p "require('./package.json').version")
-  
+
           echo "Package: $PKG_NAME"
           echo "Local version: $LOCAL_VERSION"
-  
+
           REMOTE_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null || echo "0.0.0")
-  
+
           echo "Remote version: $REMOTE_VERSION"
-  
+
           node -e "
             const semver = require('semver');
             const local='${LOCAL_VERSION}';
@@ -109,23 +109,23 @@ jobs:
             const should = semver.gt(local, remote);
             console.log('should_publish=' + should);
           " | tee /tmp/semver_out.txt
-  
+
           SHOULD_PUBLISH=$(grep -oE 'should_publish=(true|false)' /tmp/semver_out.txt | cut -d= -f2)
           echo "should_publish=$SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
-  
+
       - name: Build npm package
         if: steps.versioncheck.outputs.should_publish == 'true'
         working-directory: ./my-app
         run: npm run build-npm
-  
+
       - name: Publish to npm
         if: steps.versioncheck.outputs.should_publish == 'true'
         working-directory: ./my-app
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-  
-      - name: Skip publish (version not newer)
+
+      - name: Skip publish
         if: steps.versioncheck.outputs.should_publish != 'true'
         run: |
           echo "Skip: local version is not strictly greater than the published npm version."
