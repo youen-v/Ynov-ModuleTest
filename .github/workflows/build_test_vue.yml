@@ -59,20 +59,21 @@ jobs:
           cp -r ./my-app/docs ./content/docs
 
       - name: Upload artifact
-          uses: actions/upload-pages-artifact@v3
-          with:
-            path: ./content
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./content
 
       - name: build and publish package on NPM
+        working-directory: ./my-app
         run: |
           git config --global user.email "loise.fenoll@ynov.com"
-            git config --global user.name "Loise Fenoll"
-            npm run build-npm
-            npm version patch
-            npm publish
-            git add .
-            git commit -m "updated version"
-            git push
+          git config --global user.name "Loise Fenoll"
+          npm run build-npm
+          npm version patch
+          npm publish
+          git add .
+          git commit -m "updated version"
+          git push
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
