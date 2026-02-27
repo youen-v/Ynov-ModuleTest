@@ -116,7 +116,7 @@ jobs:
       - name: Build npm package
         if: steps.versioncheck.outputs.should_publish == 'true'
         working-directory: ./my-app
-        run: npm run build-npm
+        run: npm run build-npm-ci
 
       - name: Publish to npm
         if: steps.versioncheck.outputs.should_publish == 'true'
