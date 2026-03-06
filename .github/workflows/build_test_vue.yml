@@ -164,17 +164,18 @@ jobs:
             -p 3306:3306 \
             ci-mysql:latest
 
-      - name: Wait MySQL init
+      - name: Wait MySQL ready (SQL check)
         run: |
-          echo "Waiting for MySQL..."
-          for i in {1..30}; do
-            if docker exec mysql mysqladmin ping -p${{ secrets.MYSQL_PASSWORD }} --silent; then
-              echo "MySQL ready"
+          echo "Waiting for MySQL to accept queries..."
+          for i in {1..40}; do
+            if docker exec mysql mysql -uroot -p${{ secrets.MYSQL_PASSWORD }} -e "SELECT 1;" >/dev/null 2>&1; then
+              echo "MySQL accepts queries"
               exit 0
             fi
             sleep 2
           done
-          docker logs mysql
+          echo "MySQL not ready"
+          docker logs mysql --tail=200
           exit 1
 
       - name: Run API
