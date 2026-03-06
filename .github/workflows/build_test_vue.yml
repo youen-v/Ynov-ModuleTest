@@ -185,7 +185,7 @@ jobs:
             -e MYSQL_HOST=mysql \
             -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
             -e MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            -e MYSQL_DB=${{ secrets.MYSQL_DB }} \
+            -e MYSQL_DB=${{ secrets.MYSQL_DATABASE }} \
             ci-api:latest
 
       - name: Wait API boot
