@@ -182,14 +182,33 @@ jobs:
           docker run -d --name api \
             --network ci-net \
             -p 8000:8000 \
-            -e MYSQL_HOST=host.docker.internal \
+            -e MYSQL_HOST=mysql \
             -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
             -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            -e MYSQL_DB=${{ secrets.MYSQL_DATABASE }} \
+            -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
             ci-api:latest
 
-      - name: Wait API boot
-        run: sleep 5
+      - name: Debug containers (always)
+        if: always()
+        run: |
+          docker ps -a
+          echo "----- MYSQL LOGS -----"
+          docker logs mysql --tail=200 || true
+          echo "----- API LOGS -----"
+          docker logs api --tail=200 || true
+
+      - name: Wait API ready
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8000/users >/dev/null 2>&1; then
+              echo "API ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API not ready"
+          docker logs api --tail=200 || true
+          exit 1
 
       - name: Validate /users
         run: |
