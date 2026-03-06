@@ -96,7 +96,7 @@ jobs:
           echo "Package: $PKG_NAME"
           echo "Local version: $LOCAL_VERSION"
 
-          REMOTE_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null || echo "0.0.0")
+          REMOTE_VERSION=$(npm view "$PKG_NAME" version 2>/dev/null)
 
           echo "Remote version: $REMOTE_VERSION"
 
