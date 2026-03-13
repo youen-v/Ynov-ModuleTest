@@ -209,17 +209,8 @@ jobs:
 
       - name: Push API image
         run: |
-          IMG=$(docker compose images api --format "{{.Repository}}:{{.Tag}}" | tail -n 1)
-
-          if [ -z "$IMG" ] || [ "$IMG" = ":" ]; then
-            echo "Could not resolve api image from docker compose"
-            docker compose images
-            docker images
-            exit 1
-          fi
-
+          IMG=$(docker compose -f ./my-app/docker-compose.yml images api --format "{{.Repository}}:{{.Tag}}" | tail -n 1)
           TARGET="${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest"
-          echo "Tagging $IMG -> $TARGET"
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
 
