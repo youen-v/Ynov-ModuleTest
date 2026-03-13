@@ -209,16 +209,17 @@ jobs:
 
       - name: Push API image
         run: |
-          LOCAL_IMAGE=$(docker compose images -q api >/dev/null 2>&1 && echo "")
-          IMG=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "my-app-api:latest|api:latest" | head -n 1)
+          IMG=$(docker compose images api --format "{{.Repository}}:{{.Tag}}" | tail -n 1)
 
-          if [ -z "$IMG" ]; then
-            echo "Could not find local api image to push"
+          if [ -z "$IMG" ] || [ "$IMG" = ":" ]; then
+            echo "Could not resolve api image from docker compose"
+            docker compose images
             docker images
             exit 1
           fi
 
           TARGET="${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest"
+          echo "Tagging $IMG -> $TARGET"
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
 
