@@ -208,11 +208,19 @@ jobs:
           fi
 
       - name: Push API image
+        working-directory: ./my-app
         run: |
-          IMG=$(docker compose -f ./my-app/docker-compose.yml images api --format "{{.Repository}}:{{.Tag}}" | tail -n 1)
+          IMG="my-app-api:latest"
           TARGET="${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest"
+
+          echo "Tagging $IMG -> $TARGET"
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
+
+      - name: Stop stack
+        if: always()
+        working-directory: ./my-app
+        run: docker compose down -v --remove-orphans
 
   deploy:
     needs: publish_npm
