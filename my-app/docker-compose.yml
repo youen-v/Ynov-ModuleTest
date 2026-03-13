@@ -1,0 +1,47 @@
+version: "3.1"
+services:
+  db:
+    build:
+      context: ./
+      dockerfile: Dockerfile.mysql
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mysql -uroot -p$$MYSQL_ROOT_PASSWORD -e 'SELECT 1;' >/dev/null 2>&1",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 20s
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: ./
+      dockerfile: Dockerfile.api
+    container_name: api
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    depends_on:
+      db:
+        condition: service_healthy
