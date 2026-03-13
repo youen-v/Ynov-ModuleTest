@@ -136,6 +136,10 @@ jobs:
     needs: publish_npm
     runs-on: ubuntu-latest
 
+    env:
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -146,60 +150,32 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build MySQL image
-        run: docker build -t ci-mysql:latest -f ./my-app/Dockerfile.mysql ./my-app
-
-      - name: Build API image
-        run: docker build -t ci-api:latest -f ./my-app/Dockerfile.api ./my-app
-
-      - name: Create network
-        run: docker network create ci-net
-
-      - name: Run MySQL
+      - name: Start stack with Docker Compose
+        working-directory: ./my-app
         run: |
-          docker run -d --name mysql \
-            --network ci-net \
-            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
-            -p 3306:3306 \
-            ci-mysql:latest
+          docker compose up -d --build
+          docker compose ps
 
-      - name: Wait MySQL ready (SQL check)
+      - name: Wait db healthy
+        working-directory: ./my-app
         run: |
-          echo "Waiting for MySQL to accept queries..."
+          echo "Waiting for db to be healthy..."
           for i in {1..40}; do
-            if docker exec mysql mysql -uroot -p${{ secrets.MYSQL_PASSWORD }} -e "SELECT 1;" >/dev/null 2>&1; then
-              echo "MySQL accepts queries"
+            STATUS=$(docker inspect --format='{{.State.Health.Status}}' db 2>/dev/null || echo "starting")
+            echo "db health: $STATUS"
+            if [ "$STATUS" = "healthy" ]; then
               exit 0
             fi
             sleep 2
           done
-          echo "MySQL not ready"
-          docker logs mysql --tail=200
+          echo "db not healthy"
+          docker compose logs db --tail=200
           exit 1
 
-      - name: Run API
-        run: |
-          docker run -d --name api \
-            --network ci-net \
-            -p 8000:8000 \
-            -e MYSQL_HOST=mysql \
-            -e MYSQL_USER=${{ secrets.MYSQL_USER }} \
-            -e MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_PASSWORD }} \
-            -e MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }} \
-            ci-api:latest
-
-      - name: Debug containers (always)
-        if: always()
-        run: |
-          docker ps -a
-          echo "----- MYSQL LOGS -----"
-          docker logs mysql --tail=200 || true
-          echo "----- API LOGS -----"
-          docker logs api --tail=200 || true
-
       - name: Wait API ready
+        working-directory: ./my-app
         run: |
+          echo "Waiting API..."
           for i in {1..30}; do
             if curl -fsS http://localhost:8000/users >/dev/null 2>&1; then
               echo "API ready"
@@ -208,10 +184,10 @@ jobs:
             sleep 2
           done
           echo "API not ready"
-          docker logs api --tail=200 || true
+          docker compose logs api --tail=200
           exit 1
 
-      - name: Validate /users
+      - name: Validate /users (200 + non-empty)
         run: |
           sudo apt-get update && sudo apt-get install -y jq
 
@@ -233,9 +209,18 @@ jobs:
 
       - name: Push API image
         run: |
-          IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest"
-          docker tag ci-api:latest "$IMAGE"
-          docker push "$IMAGE"
+          LOCAL_IMAGE=$(docker compose images -q api >/dev/null 2>&1 && echo "")
+          IMG=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "my-app-api:latest|api:latest" | head -n 1)
+
+          if [ -z "$IMG" ]; then
+            echo "Could not find local api image to push"
+            docker images
+            exit 1
+          fi
+
+          TARGET="${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest"
+          docker tag "$IMG" "$TARGET"
+          docker push "$TARGET"
 
   deploy:
     needs: publish_npm
