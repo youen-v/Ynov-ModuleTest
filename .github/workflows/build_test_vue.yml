@@ -152,8 +152,14 @@ jobs:
       - name: Start stack with Docker Compose
         working-directory: ./my-app
         run: |
+          set +e
           docker compose up -d --build
+          STATUS=$?
           docker compose ps
+          echo "===== DB LOGS ====="
+          docker compose logs db --tail=300
+          echo "===== END DB LOGS ====="
+          exit $STATUS
 
       - name: Wait db healthy
         working-directory: ./my-app
