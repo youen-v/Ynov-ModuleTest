@@ -6,6 +6,11 @@ jest.mock("axios", () => ({
   },
 }));
 
+jest.mock("@/config/api", () => ({
+  __esModule: true,
+  API_BASE_URL: "http://localhost:8000",
+}));
+
 import axios from "axios";
 import { render, screen } from "@testing-library/vue";
 import userEvent from "@testing-library/user-event";
