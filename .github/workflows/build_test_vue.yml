@@ -206,6 +206,15 @@ jobs:
             exit 1
           fi
 
+      - name: Run Cypress tests
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: ./my-app
+          browser: chrome
+          install: false
+          wait-on: "http://localhost:5173/Ynov-ModuleTest/,http://localhost:8000/users"
+          wait-on-timeout: 120
+
       - name: Push API image
         working-directory: ./my-app
         run: |
@@ -215,15 +224,6 @@ jobs:
           echo "Tagging $IMG -> $TARGET"
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
-
-      - name: Run Cypress tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: ./my-app
-          browser: chrome
-          install: false
-          wait-on: "http://localhost:5173/Ynov-ModuleTest/,http://localhost:8000/users"
-          wait-on-timeout: 120
 
       - name: Stop stack
         if: always()
