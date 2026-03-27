@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     zip VARCHAR(10) NOT NULL,
     city VARCHAR(255) NOT NULL
 );
-INSERT INTO utilisateur (name, email) VALUES ('Alice', 'alice@example.com');
+INSERT INTO utilisateur (name, email, birthDate, zip, city) VALUES ('Alice', 'alice@example.com', '1990-01-01', '75000', 'Paris');
