@@ -212,11 +212,12 @@ jobs:
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
 
-      - name: Run Cypress against real stack
+      - name: Run Cypress tests
         uses: cypress-io/github-action@v6
         with:
           working-directory: ./my-app
           browser: chrome
+          install: false
           wait-on: "http://localhost:5173/Ynov-ModuleTest/,http://localhost:8000/users"
           wait-on-timeout: 120
 
