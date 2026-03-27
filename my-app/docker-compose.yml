@@ -44,6 +44,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/users >/dev/null"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
 
   web:
     image: my-app-web
@@ -53,10 +59,10 @@ services:
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:8000
+      VITE_API_URL: ${VITE_API_URL}
     volumes:
       - ./:/app
       - /app/node_modules
     depends_on:
       api:
-        condition: service_started
+        condition: service_healthy
