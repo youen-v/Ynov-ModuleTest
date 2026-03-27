@@ -25,7 +25,7 @@ export const useUsersStore = defineStore("users", {
 
         this.users = rows.map((user) => ({
           id: user.id,
-          name: user.nom,
+          name: user.name,
           email: user.email,
         }));
       } catch (e) {
