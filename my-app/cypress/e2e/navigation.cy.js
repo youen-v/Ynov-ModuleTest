@@ -1,69 +1,26 @@
 import { faker } from "@faker-js/faker";
 
 describe("Test registration user", () => {
-  const user = {
+  const APP = "http://localhost:5173/Ynov-ModuleTest/";
+  const API = "http://localhost:8000/users";
+
+  const makeUser = () => ({
     firstName: faker.person.firstName(),
     lastName: faker.person.lastName(),
-    email: faker.internet.email(),
+    email: `test_${Date.now()}_${faker.string.alphanumeric(6)}@mail.com`,
     birthDate: "2000-01-01",
     zip: "29200",
     city: "Brest",
-  };
-
-  let apiUsers = [];
-  let createdUser = null;
-
-  const API = "https://jsonplaceholder.typicode.com/users";
-  const APP = "http://localhost:5173/Ynov-ModuleTest/";
-
-  beforeEach(() => {
-    apiUsers = createdUser ? [createdUser] : [];
-
-    // Mock GET
-    cy.intercept("GET", API, (req) => {
-      req.reply({
-        statusCode: 200,
-        body: apiUsers,
-      });
-    }).as("getUsers");
-
-    // Mock POST
-    cy.intercept("POST", API, (req) => {
-      const incoming = req.body;
-
-      const alreadyExists = apiUsers.some((u) => u.email === incoming.email);
-      if (alreadyExists) {
-        return req.reply({
-          statusCode: 409,
-          body: { message: "Email déjà utilisé" },
-        });
-      }
-
-      const saved = {
-        id: Date.now(),
-        name: `${incoming.firstName} ${incoming.lastName}`.trim(),
-        email: incoming.email,
-        ...incoming,
-      };
-
-      apiUsers.push(saved);
-
-      return req.reply({
-        statusCode: 201,
-        body: saved,
-      });
-    }).as("postUser");
-
-    cy.visit(APP);
-    cy.wait("@getUsers");
   });
 
-  it("Scénario Nominal: create a valid user, then verify on home", () => {
-    // Accueil 0 utilisateur
-    cy.contains("0 utilisateur(s) inscrit(s)").should("be.visible");
-    cy.contains("Aucun utilisateur inscrit.").should("be.visible");
+  beforeEach(() => {
+    cy.visit(APP);
+  });
 
-    // Formulaire
+  it("Scénario nominal : créer un utilisateur valide puis le voir sur l'accueil", () => {
+    const user = makeUser();
+    const fullName = `${user.firstName} ${user.lastName}`;
+
     cy.contains("S'inscrire").click();
     cy.url().should("include", "/register");
 
@@ -76,62 +33,45 @@ describe("Test registration user", () => {
     cy.get("#city").type(user.city);
     cy.get('button[type="submit"]').click();
 
-    // On attend le POST mocké + on capture le user créé
-    cy.wait("@postUser").then((interception) => {
-      expect(interception.response.statusCode).to.eq(201);
-      createdUser = interception.response.body; // <-- on stocke pour le test suivant
-    });
-
-    // Succès
     cy.contains("Enregistré").should("be.visible");
 
-    // Redirection
-    cy.wait(2100);
-    cy.wait("@getUsers");
+    cy.url().should("include", "/");
+    cy.contains(fullName).should("be.visible");
 
-    // Vérifie 1 utilisateur
-    cy.contains("1 utilisateur(s) inscrit(s)").should("be.visible");
-    cy.contains(`${user.firstName} ${user.lastName}`).should("be.visible");
+    cy.request(API).then((response) => {
+      expect(response.status).to.eq(200);
 
-    cy.then(() => {
-      expect(apiUsers).to.have.length(1);
-      expect(apiUsers[0].email).to.equal(user.email);
+      const rows =
+        response.body?.utilisateurs ??
+        response.body?.users ??
+        response.body ??
+        [];
+
+      const found = rows.find((u) => u.email === user.email);
+      expect(found).to.exist;
     });
   });
 
-  it("Scénario d'Erreur: with 1 existing user, try duplicate email, verify unchanged", () => {
-    if (!createdUser) {
-      createdUser = {
-        id: 1,
-        name: "Existing User",
-        firstName: "Existing",
-        lastName: "User",
-        email: "existing@test.com",
-        birthDate: "2000-01-01",
-        zip: "29200",
-        city: "Brest",
-      };
-      apiUsers = [createdUser];
-      cy.visit(APP);
-      cy.wait("@getUsers");
-    }
+  it("Scénario erreur : email déjà utilisé", () => {
+    const user = makeUser();
 
-    // Accueil doit déjà avoir 1 user
-    cy.contains("1 utilisateur(s) inscrit(s)").should("be.visible");
-    cy.contains(createdUser.name).should("be.visible");
+    cy.request("POST", API, user).then((response) => {
+      expect([200, 201]).to.include(response.status);
+    });
 
-    // Formulaire
+    cy.visit(APP);
+
     cy.contains("S'inscrire").click();
     cy.url().should("include", "/register");
 
-    // Tentative invalide email déjà pris
-    cy.get("#lastName").type(faker.person.lastName());
-    cy.get("#firstName").type(faker.person.firstName());
-    cy.get("#email").type(createdUser.email); // email déjà utilisé
-    cy.get("#birthDate").type("2000-01-01");
-    cy.get("#zip").type("29200");
-    cy.get("#city").type("Brest");
+    cy.get("#lastName").type(user.lastName);
+    cy.get("#firstName").type(user.firstName);
+    cy.get("#email").type(user.email);
+    cy.get("#birthDate").type(user.birthDate);
+    cy.get("#zip").type(user.zip);
+    cy.get("#city").type(user.city);
     cy.get('button[type="submit"]').click();
+
     cy.contains("Email déjà utilisé").should("be.visible");
 
     // Retour home
