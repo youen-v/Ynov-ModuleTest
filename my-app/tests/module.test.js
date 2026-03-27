@@ -53,9 +53,7 @@ describe("useUsersStore (unit)", () => {
 
     await p;
 
-    expect(axios.get).toHaveBeenCalledWith(
-      "https://jsonplaceholder.typicode.com/users",
-    );
+    expect(axios.get).toHaveBeenCalledWith("http://localhost:8000/users");
     expect(store.loading).toBe(false);
     expect(store.getError).toBeNull();
     expect(store.users).toEqual(apiUsers);
@@ -110,7 +108,7 @@ describe("useUsersStore (unit)", () => {
     expect(store.users[0]).toEqual(newUser);
 
     expect(axios.post).toHaveBeenCalledWith(
-      "https://jsonplaceholder.typicode.com/users",
+      "http://localhost:8000/users",
       newUser,
     );
   });
@@ -170,10 +168,9 @@ test("store getters: userCount + getError", async () => {
   axios.post.mockResolvedValueOnce({ data: {} });
   await store.addUser({ email: "a@b.com" });
 
-  expect(axios.post).toHaveBeenCalledWith(
-    "https://jsonplaceholder.typicode.com/users",
-    { email: "a@b.com" },
-  );
+  expect(axios.post).toHaveBeenCalledWith("http://localhost:8000/users", {
+    email: "a@b.com",
+  });
 
   await expect(store.addUser({ email: "a@b.com" })).rejects.toThrow(
     "Email déjà utilisé",
