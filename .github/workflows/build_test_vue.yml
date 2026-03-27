@@ -212,6 +212,10 @@ jobs:
           docker tag "$IMG" "$TARGET"
           docker push "$TARGET"
 
+      - name: Install dependencies
+        working-directory: ./my-app
+        run: npm ci
+
       - name: Run Cypress tests
         uses: cypress-io/github-action@v6
         with:
