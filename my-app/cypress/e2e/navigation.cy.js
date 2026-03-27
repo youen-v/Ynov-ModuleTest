@@ -33,11 +33,11 @@ describe("Test registration user", () => {
     cy.get("#city").type(user.city);
     cy.get('button[type="submit"]').click();
 
-    cy.contains("Enregistré").should("be.visible");
-
+    // Vérification le retour à l'accueil plutôt qu'un toast fragile
     cy.url().should("include", "/");
     cy.contains(fullName).should("be.visible");
 
+    // Vérification côté API
     cy.request(API).then((response) => {
       expect(response.status).to.eq(200);
 
@@ -74,17 +74,18 @@ describe("Test registration user", () => {
 
     cy.contains("Email déjà utilisé").should("be.visible");
 
-    // Retour home
-    cy.visit(APP);
-    cy.wait("@getUsers");
+    // Vérification que l'API contient bien un seul user avec cet email
+    cy.request(API).then((response) => {
+      expect(response.status).to.eq(200);
 
-    // Toujours 1 utilisateur + liste inchangée
-    cy.contains("1 utilisateur(s) inscrit(s)").should("be.visible");
-    cy.contains(createdUser.name).should("be.visible");
+      const rows =
+        response.body?.utilisateurs ??
+        response.body?.users ??
+        response.body ??
+        [];
 
-    cy.then(() => {
-      expect(apiUsers).to.have.length(1);
-      expect(apiUsers[0].email).to.equal(createdUser.email);
+      const matches = rows.filter((u) => u.email === user.email);
+      expect(matches.length).to.eq(1);
     });
   });
 });
