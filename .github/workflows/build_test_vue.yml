@@ -30,6 +30,8 @@ jobs:
       - name: Run tests
         working-directory: ./my-app
         run: npm test
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
