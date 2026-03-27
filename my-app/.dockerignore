@@ -1,0 +1,10 @@
+.vscode
+coverage
+cypress
+.gitignore
+node_modules
+dist
+docs
+*.md
+.DS_Store
+.env

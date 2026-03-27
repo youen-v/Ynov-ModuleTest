@@ -44,3 +44,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  web:
+    image: my-app-web
+    build:
+      context: ./
+      dockerfile: Dockerfile.web
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    depends_on:
+      api:
+        condition: service_started

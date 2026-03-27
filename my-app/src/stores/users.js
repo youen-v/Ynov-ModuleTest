@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import axios from "axios";
 
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
+
 export const useUsersStore = defineStore("users", {
   state: () => ({
     users: [],
@@ -17,11 +19,17 @@ export const useUsersStore = defineStore("users", {
       this.error = null;
 
       try {
-        const { data } = await axios.get(
-          "https://jsonplaceholder.typicode.com/users",
-        );
-        this.users = data ?? [];
+        const { data } = await axios.get(`${API_BASE_URL}/users`);
+
+        const rows = data?.utilisateurs ?? data?.users ?? data ?? [];
+
+        this.users = rows.map((user) => ({
+          id: user.id,
+          name: user.nom,
+          email: user.email,
+        }));
       } catch (e) {
+        console.error(e);
         this.error = "Erreur lors du chargement des utilisateurs";
       } finally {
         this.loading = false;
@@ -40,7 +48,7 @@ export const useUsersStore = defineStore("users", {
       this.users.push(user);
 
       try {
-        await axios.post("https://jsonplaceholder.typicode.com/users", user);
+        await axios.post(`${API_BASE_URL}/users`, user);
       } catch (error) {
         const status = error?.response?.status;
         const backendMsg = error?.response?.data?.message;
