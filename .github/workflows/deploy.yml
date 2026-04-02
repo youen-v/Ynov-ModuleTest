@@ -116,14 +116,21 @@ jobs:
       - name: Wait for SSH
         shell: bash
         run: |
+          chmod 600 key.pem
+
           for i in {1..30}; do
-            if ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ needs.terraform.outputs.server_ip }} "echo ok" 2>/dev/null; then
-              echo "SSH ready"
-              exit 0
-            fi
+            echo "Tentative SSH $i..."
+            ssh -vvv \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=/dev/null \
+              -o ConnectTimeout=10 \
+              -i key.pem \
+              ubuntu@${{ needs.terraform.outputs.server_ip }} "echo ok" && exit 0
+
             echo "Waiting for SSH..."
             sleep 10
           done
+
           echo "SSH not ready"
           exit 1
 
