@@ -6,7 +6,6 @@
     project_dir : /home/ubuntu/my-app
     docker_username : "{{ docker_username }}"
     docker_password : "{{ docker_token }}"
-    registry_url : "{{ registry_url }}"
   tasks:
 
     - name: Mise à jour du cache APT
