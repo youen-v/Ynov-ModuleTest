@@ -33,14 +33,14 @@ resource "tls_private_key" "ephemeral_key" {
 }
 
 resource "aws_key_pair" "deployer_key" {
-  key_name   = "zero-touch-deploy-key"
-  public_key = tls_private_key.ephemeral_key.public_key_openssh
+  key_name_prefix   = "zero-touch-deploy-key-"
+  public_key        = tls_private_key.ephemeral_key.public_key_openssh
 }
 
 # 3. Security Group (Règles strictes adaptées à votre application)
 resource "aws_security_group" "app_sg" {
-  name        = "zero-touch-sg"
-  description = "Allow SSH, Frontend (5173), API (8000) and Adminer (8080)"
+  name_prefix        = "zero-touch-sg-"
+  description        = "Allow SSH, Frontend (5173), API (8000) and Adminer (8080)"
 
   # SSH (Port 22) - Strictement pour Ansible
   ingress {
