@@ -140,7 +140,8 @@ jobs:
             --extra-vars "docker_username=${{ secrets.DOCKERHUB_USERNAME }}" \
             --extra-vars "docker_token=${{ secrets.DOCKERHUB_TOKEN }}" \
             --extra-vars "api_image=${{ env.API_IMAGE }}" \
-            --extra-vars "front_image=${{ env.FRONT_IMAGE }}"
+            --extra-vars "front_image=${{ env.FRONT_IMAGE }}" \
+            --extra-vars "registry_url=docker.io"
 
   summary:
     name: Deployment Summary
