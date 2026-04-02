@@ -6,7 +6,7 @@
     project_dir : /home/ubuntu/my-app
     docker_username : "{{ github_user }}"
     docker_password : "{{ github_token }}"
-    registry_url : "ghcr.io"
+    registry_url : "{{ registry_url }}"
   tasks:
 
     - name: Mise à jour du cache APT
