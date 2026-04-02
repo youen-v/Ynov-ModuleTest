@@ -1,0 +1,146 @@
+name: Deploy Prod
+
+on:
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-west-3
+  TF_WORKING_DIR: ./infra
+  ANSIBLE_WORKING_DIR: ./ansible
+  API_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-api:latest
+  FRONT_IMAGE: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/ci-cd-youen-ynov-front:latest
+
+jobs:
+  build_publish:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build API image
+        run: |
+          docker build -t $API_IMAGE -f ./my-app/Dockerfile.api ./my-app
+
+      - name: Push API image
+        run: docker push $API_IMAGE
+
+      - name: Build Front image
+        run: |
+          docker build -t $FRONT_IMAGE -f ./my-app/Dockerfile.front ./my-app
+
+      - name: Push Front image
+        run: docker push $FRONT_IMAGE
+
+  terraform:
+    name: Provision Infrastructure
+    runs-on: ubuntu-latest
+    needs: build_publish
+
+    outputs:
+      server_ip: ${{ steps.tf_outputs.outputs.server_ip }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        run: terraform apply -auto-approve
+
+      - name: Read Terraform outputs
+        id: tf_outputs
+        working-directory: ${{ env.TF_WORKING_DIR }}
+        shell: bash
+        run: |
+          SERVER_IP=$(terraform output -raw server_public_ip)
+          echo "server_ip=$SERVER_IP" >> "$GITHUB_OUTPUT"
+
+          terraform output -raw private_key_pem > ../key.pem
+          chmod 600 ../key.pem
+
+          {
+            echo "[web]"
+            echo "$SERVER_IP ansible_user=ubuntu ansible_ssh_private_key_file=key.pem ansible_ssh_common_args='-o StrictHostKeyChecking=no'"
+          } > ../inventory.ini
+
+      - name: Upload bridge artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bridge-files
+          path: |
+            key.pem
+            inventory.ini
+
+  ansible:
+    name: Configure and Deploy
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download bridge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bridge-files
+          path: .
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible sshpass
+
+      - name: Wait for SSH
+        shell: bash
+        run: |
+          for i in {1..30}; do
+            if ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ needs.terraform.outputs.server_ip }} "echo ok" 2>/dev/null; then
+              echo "SSH ready"
+              exit 0
+            fi
+            echo "Waiting for SSH..."
+            sleep 10
+          done
+          echo "SSH not ready"
+          exit 1
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i inventory.ini ${{ env.ANSIBLE_WORKING_DIR }}/playbook.yml \
+            --extra-vars "docker_username=${{ secrets.DOCKERHUB_USERNAME }}" \
+            --extra-vars "docker_token=${{ secrets.DOCKERHUB_TOKEN }}" \
+            --extra-vars "api_image=${{ env.API_IMAGE }}" \
+            --extra-vars "front_image=${{ env.FRONT_IMAGE }}"
+
+  summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [terraform, ansible]
+
+    steps:
+      - name: Show final URL
+        run: |
+          echo "Application deployed at: http://${{ needs.terraform.outputs.server_ip }}"

@@ -1,0 +1,43 @@
+services:
+  front:
+    image: "{{ front_image }}"
+    ports:
+      - "5173:5173"
+    restart: unless-stopped
+
+  api:
+    image: "{{ back_image }}"
+    ports:
+      - "8000:8000"
+    environment:
+      DB_HOST: db
+      DB_NAME: "{{ db_name }}"
+      DB_USER: "{{ db_user }}"
+      DB_PASSWORD: "{{ db_password }}"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: "{{ db_name }}"
+      MYSQL_USER: "{{ db_user }}"
+      MYSQL_PASSWORD: "{{ db_password }}"
+      MYSQL_ROOT_PASSWORD: "{{ db_root_password }}"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:latest
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
