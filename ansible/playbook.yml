@@ -4,8 +4,8 @@
   become: true
   vars :
     project_dir : /home/ubuntu/my-app
-    docker_username : "{{ github_user }}"
-    docker_password : "{{ github_token }}"
+    docker_username : "{{ docker_username }}"
+    docker_password : "{{ docker_token }}"
     registry_url : "{{ registry_url }}"
   tasks:
 
