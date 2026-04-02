@@ -6,7 +6,7 @@ services:
     restart: unless-stopped
 
   api:
-    image: "{{ back_image }}"
+    image: "{{ api_image }}"
     ports:
       - "8000:8000"
     environment:
