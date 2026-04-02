@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Front image
         run: |
-          docker build -t $FRONT_IMAGE -f ./my-app/Dockerfile.front ./my-app
+          docker build -t $FRONT_IMAGE -f ./my-app/Dockerfile.web ./my-app
 
       - name: Push Front image
         run: docker push $FRONT_IMAGE
