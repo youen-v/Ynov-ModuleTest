@@ -5,7 +5,7 @@
   vars :
     project_dir : /home/ubuntu/my-app
     docker_username : "{{ docker_username }}"
-    docker_password : "{{ docker_token }}"
+    docker_password : "{{ docker_password }}"
   tasks:
 
     - name: Mise à jour du cache APT
