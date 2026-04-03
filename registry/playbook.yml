@@ -48,7 +48,7 @@
         name: python3-passlib
         state: present
 
-    - name: Génération mot de passe (admin/admin123)
+    - name: Génération mot de passe
       htpasswd:
         path: "{{ project_dir }}/auth/registry.password"
         name: "{{ registry_user }}"
