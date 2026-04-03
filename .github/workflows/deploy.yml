@@ -145,7 +145,10 @@ jobs:
             --extra-vars "db_name=${{ secrets.DB_NAME }}" \
             --extra-vars "db_user=${{ secrets.DB_USER }}" \
             --extra-vars "db_password=${{ secrets.DB_PASSWORD }}" \
-            --extra-vars "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}"
+            --extra-vars "db_root_password=${{ secrets.DB_ROOT_PASSWORD }}" \
+            --extra-vars "registry_password=${{ secrets.REGISTRY_PASSWORD }}" \
+            --extra-vars "registry_user=${{ secrets.REGSITRY_USER }}"
+          
 
   summary:
     name: Deployment Summary
